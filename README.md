@@ -1,2 +1,2 @@
-# Simulaci-n-Modelado
+# Simulacion-Modelado
 Todo es trivial
