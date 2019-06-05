@@ -6,7 +6,6 @@
 
 #include "Message.h"
 
-
 class Simulator
 {
     private:  
@@ -25,19 +24,23 @@ class Simulator
         //
         int minimum();
         // linea de tiempo miedo
-        unsigned int timeline[6];
+        double timeline[6];
         // 
         std::list<Message> message_list;
         // 
-        int max;
-  
+        double max_time;
+        //
         int current_message;
-        
+        //
         bool A_free;
-        
+        //
         bool B_free;
-  
-        unsigned int clock;
+        //
+        double clock;
+        //
+        int total_message;
+        //
+        double time_out;
 
     public:
         Simulator();
