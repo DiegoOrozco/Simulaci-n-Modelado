@@ -1,6 +1,4 @@
 
-// Simulator.cpp
-
 #include "Simulator.h"
 #include <iostream>
 
@@ -95,6 +93,50 @@ int Simulator::ack_arrival()
 int Simulator::timeout()
 {
 	
+}
+
+// Generar tiempo de conversión
+double Simulator::generate_conversion_time()
+{
+  	double result = 0.0;
+  
+  	while(result == 0.0)
+    {
+        std::srand(std::time(NULL));
+        double r = ( std::rand() % 1000 ) / 1000;
+        result = -2 * std::log(1-r);
+    }
+	
+  	return result;
+}
+
+// Generar tiempo de revisión
+double Simulator::generate_check_time()
+{
+  	std::srand(std::time(NULL));
+  	double r = ( std::rand() % 1000 ) / 1000;
+  	return sqrt(5*r+4);
+}
+
+
+// Generar tiempo entre arribos
+double Simulator::generate_arrival_time()
+{
+  	double r[12];
+  
+	for (int index = 0; index < 12; ++index)
+    {
+        std::srand(std::time(NULL));
+        r[index] = ( std::rand() % 1000 ) / 1000;    
+    }
+	
+  	double sum = 0.0;
+  	for (int index = 0; index < 12; ++index)
+    	sum += r[index];
+  
+	sum -= 6;
+  
+  	return (1 * sum + 25);
 }
 
 

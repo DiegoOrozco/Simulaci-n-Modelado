@@ -4,6 +4,7 @@
 #include <list>
 
 #include "Message.h"
+#include <cmath>
 
 
 class Simulator
@@ -27,13 +28,20 @@ class Simulator
         unsigned int timeline[6];
         // 
         std::list<Message> message_list;
-
+        // 
         int max = 0;
     
     public:
         Simulator();
         ~Simulator();
         int run(char** argc);
-      
+        // Generar tiempo de conversión
+        double generate_conversion_time();
+        // Generar tiempo de revisión
+        double generate_check_time();
+        // Generar tiempo entre arribos
+        double generate_arrival_time();
 };
 #endif // SIMULATOR_H
+
+
