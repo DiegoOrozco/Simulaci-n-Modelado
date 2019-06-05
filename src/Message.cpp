@@ -31,7 +31,7 @@ void Message::set_error(bool value)
 	this->error = value;
 }
   
-void Message::set_timeout(unsigned int value)
+void Message::set_timeout(double value)
 {
   	this->timeout = value;
 }

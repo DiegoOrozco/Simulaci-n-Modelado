@@ -1,3 +1,4 @@
+
 #include "Simulator.h"
 #include <iostream>
 #include <ctime>
@@ -6,11 +7,14 @@
 Simulator::Simulator()
 	: max_time{0.0}
 	, current_message{0}
+	, current_frame{0}
 	, A_free{true}
 	, B_free{true}
 	, clock{0.0}
 	, total_message{0}
 	, time_out{0.0}
+	, current_ack{0}
+    , acked_messages{0}
 
 {
 	this->timeline[0] = 0;
@@ -124,6 +128,7 @@ int Simulator::a_released()
 
         // FB = reloj + 1
         this->timeline[2] = this->clock + 1;
+      	frame_queue.push(this->current_message);
     }
 
 	// Siempre asumo que el mensaje se envia
@@ -147,6 +152,8 @@ int Simulator::a_released()
         this->timeline[1] = std::numeric_limits<double>::infinity();
     }
   	
+  	++this->current_message;
+  
   	// Si reloj > MAX
     if ( this->clock >= this->max_time )
       	return 1;
@@ -185,19 +192,135 @@ int Simulator::frame_arrival()
 int Simulator::b_released()
 {
   
+	// Reloj = LB
+	this->clock = this->timeline[3];
+	
+  	// obtengo el id del primer frame de la cola
+    int index_frame = this->frame_queue.front();
+	
+  	// si no son iguales, el frame no ser perdió
+	if( index_frame != this->current_frame)
+    	// Desechar mensaje
+		this->frame_queue.pop();
+  	// si no se perdió
+  	else
+    {
+      auto iterator = this->message_list.begin();
+
+      // obtengo el los datos del mensaje enviado
+      for(; iterator != this->message_list.end(); ++iterator)
+          if((*iterator).get_id() == index_frame)
+              break;
+      
+      // si el frame tuvo errores
+      if ( (*iterator).get_error() )
+    	// Desechar mensaje
+      	this->frame_queue.pop();
+      // Si frame bueno
+      else
+	    // ++Frame actual
+        ++this->current_frame;	
+	}
+
+    std::srand(std::time(NULL));
+    double random = ( std::rand() % 100 ) / 100.0;
+
+	//Si no se pierde el ACK
+    if(random > 0.15)
+    {
+    	// LACK = Reloj + 0.25 + 1
+    	this->timeline[4] = this->clock + 0.25 + 1;
+    }
+    //Si se pierde
+    else
+    {
+	    //LACK = ∞
+        this->timeline[4] = std::numeric_limits<double>::infinity();
+    }
+		      
+    if ( this->clock >= this->max_time )
+      	return 1;
+	else
+		return 0;
 }
 
 // Llega un ACK a A
 int Simulator::ack_arrival()
 {
-	
+	// Reloj = LACK
+  	this->clock = this->timeline[4];
+  	int received_ack = this->ack_queue.front();
+  	
+  	// Si ack menor que el esperado
+    if(received_ack < this->current_ack)  
+    {
+       	// Msj actual = 0
+      	this->current_message = this->acked_messages;
+      	this->timeline[5] = std::numeric_limits<double>::infinity();
+		
+      	for(auto iterator = this->message_list.begin(); iterator != message_list.end(); ++iterator)
+        {
+          	(*iterator).set_timeout( std::numeric_limits<double>::infinity() );
+          	(*iterator).set_send(false);
+        }
+      
+    }
+  	// Si ack correcto
+  	else if( received_ack >= this->current_ack)
+    {
+      	// Desecho los mensajes ackeados de la lista
+      	int acked_msgs = 1 + received_ack - this->current_ack;
+ 		
+      	this->acked_messages += acked_msgs;
+      
+      	for(size_t message = 0; message < acked_msgs; ++message)
+      		this->message_list.pop_front();
+      
+      	// Muevo la ventana
+      	this->current_ack = received_ack;
+      
+      	// TO = TO del siguiente
+      	if(!this->message_list.empty())
+      		this->timeline[5] = this->message_list.front().get_timeout();
+      	else
+          	this->timeline[5] = std::numeric_limits<double>::infinity();
+    }
+  
+  	if(this->A_free || !this->message_list.empty())
+    {
+        double conversion_time = generate_conversion_time();        
+        this->timeline[1] = this->clock + conversion_time + 1;
+    }
+  
+    if ( this->clock >= this->max_time )
+      	return 1;
+	else
+		return 0;
+
 }
 
-//  timer que se vence el timer timeout time
+//  timer que se vence el timer timeout time que se vence cuando da timeout con el timer
 int Simulator::timeout()
 {
-	
+	// Reloj = LACK
+  	this->clock = this->timeline[5];
+
+    // Msj actual = 0
+    this->current_message = this->acked_messages;
+    this->timeline[5] = std::numeric_limits<double>::infinity();
+
+    for(auto iterator = this->message_list.begin(); iterator != message_list.end(); ++iterator)
+    {
+        (*iterator).set_timeout( std::numeric_limits<double>::infinity() );
+        (*iterator).set_send(false);
+    }
+    
+    if ( this->clock >= this->max_time )
+      	return 1;
+	else
+		return 0;    
 }
+
 
 // Generar tiempo de conversión
 double Simulator::generate_conversion_time()
@@ -242,6 +365,4 @@ double Simulator::generate_arrival_time()
   
   	return (1 * sum + 25);
 }
-
-
 

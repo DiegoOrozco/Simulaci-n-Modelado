@@ -3,6 +3,8 @@
 
 #include <list>
 #include <cmath>
+#include <queue> 
+
 
 #include "Message.h"
 
@@ -27,10 +29,20 @@ class Simulator
         double timeline[6];
         // 
         std::list<Message> message_list;
+        //
+        std::queue<int> frame_queue;
+  
+        std::queue<int> ack_queue;
         // 
         double max_time;
-        //
+        // Mensaje que A está atendiendo
         int current_message;
+        // Frame que B está atendiendo
+        int current_frame;
+        // ACK que estoy esperando recibir (el primero de la ventana)
+        int current_ack;
+        // Cantidad de mensajes que han recibido el ACK
+        int acked_messages;
         //
         bool A_free;
         //
@@ -54,3 +66,4 @@ class Simulator
         double generate_arrival_time();
 };
 #endif // SIMULATOR_H
+

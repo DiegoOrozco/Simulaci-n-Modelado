@@ -5,7 +5,7 @@ class Message
     private:
         bool message_send;
         bool error;     
-        unsigned int timeout;
+        double timeout;
         int id;
 
     public:
@@ -19,10 +19,10 @@ class Message
         inline bool get_error() { return this->error; }
         void set_error(bool value);
 
-        inline bool get_timeout() { return this->timeout; }
-        void set_timeout(unsigned int value);
+        inline double get_timeout() { return this->timeout; }
+        void set_timeout(double value);
 
-        inline bool get_id() { return this->id; }
+        inline int get_id() { return this->id; }
         void set_id(int value);        
 };
 
