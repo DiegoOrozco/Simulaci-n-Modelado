@@ -1,6 +1,7 @@
 
 #include "Simulator.h"
 #include <iostream>
+#include <ctime>
 
 Simulator::Simulator()
 {

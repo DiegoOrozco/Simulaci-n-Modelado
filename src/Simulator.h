@@ -2,9 +2,9 @@
 #define SIMULATOR_H
 
 #include <list>
+#include <cmath>
 
 #include "Message.h"
-#include <cmath>
 
 
 class Simulator
@@ -30,6 +30,8 @@ class Simulator
         std::list<Message> message_list;
         // 
         int max = 0;
+        // Mensaje actual que se va a enviar
+        int current_message = 0;
     
     public:
         Simulator();
