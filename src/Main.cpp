@@ -1,8 +1,8 @@
 // Main.cpp
 #include "Simulator.h"
 
-int main(int argc char* argv[])
+int main(int argc, char* argv[])
 {
 	Simulator simulator;
-  	return simulator.run();
+  	return simulator.run(argv);
 }
