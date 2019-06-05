@@ -1,8 +1,14 @@
 
 // Simulator.cpp
 
+#include "Simulator.h"
+#include <iostream>
+
 Simulator::Simulator()
 {
+	this->timeline[0] = 0;
+	for(int index = 1; index < 6; ++index)
+		this->timeline[index] = -1;
 }
 
 Simulator::~Simulator()
@@ -11,13 +17,13 @@ Simulator::~Simulator()
 
 int Simulator::minimum()
 {
-	unsigned int min = this.timeline[0];
+	unsigned int min = this->timeline[0];
 	int index = 0;
 	for(int i = 1; i < 6; ++i)
 	{
-		if(this.timeline[i] < min)
+		if(this->timeline[i] < min)
 		{
-			min = this.timeline[i];
+			min = this->timeline[i];
 			index = i;
 		}
 	}
@@ -28,22 +34,22 @@ int Simulator::minimum()
 int Simulator::run(char* argv[])
 {
 	// cambiar si es con interfaz
-	this.max = (unsigned int) atoi(argv[1]);
+	this->max = (unsigned int) atoi(argv[1]);
 	bool stop = false;
 	int ret = 0;
 	while(!stop)
 	{
-		int minimum = this.minimum();
+		int minimum = this->minimum();
 		
 		switch(minimum)
 		{
-			case 0: ret = this.message_arrival();	 	break;
-			case 1: ret = this.a_released(); 			break;
-			case 2: ret = this.frame_arrival(); 		break;
-			case 3: ret = this.b_released(); 			break;
-			case 4: ret = this.ack_arrival(); 		break;
-			case 5: ret = this.timeout(); 			break;
-			default: std::cout << "Wtf" << std::endl; break;
+			case 0: ret = this->message_arrival();	 	break;
+			case 1: ret = this->a_released(); 			break;
+			case 2: ret = this->frame_arrival(); 		break;
+			case 3: ret = this->b_released(); 			break;
+			case 4: ret = this->ack_arrival(); 			break;
+			case 5: ret = this->timeout(); 				break;
+			default: std::cout << "Wtf" << std::endl; 	break;
 		}
 		
 		if(ret == 1)

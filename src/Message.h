@@ -3,21 +3,21 @@
 class Message
 {
     private:
-        bool message_arrived = false;
-        bool error = false;     
-        unsigned int timeout = 0;
+        bool message_arrived;
+        bool error;     
+        unsigned int timeout;
 
     public:
         Message();
         ~Message();
 
-        inline bool get_arrived() { return this.message_arrived; }
+        inline bool get_arrived() { return this->message_arrived; }
         void set_arrived(bool value);
 
-        inline bool get_error() { return this.error; }
+        inline bool get_error() { return this->error; }
         void set_error(bool value);
 
-        inline bool get_timeout() { return this.timeout; }
+        inline bool get_timeout() { return this->timeout; }
         void set_timeout(unsigned int value);
 };
 

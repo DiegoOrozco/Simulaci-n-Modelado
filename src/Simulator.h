@@ -5,30 +5,35 @@
 
 #include "Message.h"
 
+
 class Simulator
 {
     private:  
         // Llega un mensaje a A
-        void message_arrival();
+        int message_arrival();
         // Se libera A
-        void a_released();
+        int a_released();
         // Llega un frame a B
-        void frame_arrival();
+        int frame_arrival();
         // Se libera B
-        void b_released();
+        int b_released();
         // Llega un ACK a A
-        void ack_arrival();  
+        int ack_arrival();  
         //  timer que se vence el timer timeout time
-        void timeout();
+        int timeout();
+        //
+        int minimum();
         // linea de tiempo miedo
-        unsigned int timeline[6] = {0, -1, -1, -1, -1}
+        unsigned int timeline[6];
         // 
-        std::list<Messasge> message_list;
+        std::list<Message> message_list;
+
+        int max = 0;
     
     public:
         Simulator();
         ~Simulator();
-        int run(char* argc[]);
+        int run(char** argc);
       
 };
 #endif // SIMULATOR_H
