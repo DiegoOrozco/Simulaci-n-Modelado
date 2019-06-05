@@ -8,13 +8,13 @@ Simulator::Simulator()
 	: max_time{0.0}
 	, current_message{0}
 	, current_frame{0}
+	, current_ack{0}
+    , acked_messages{0}
 	, A_free{true}
 	, B_free{true}
 	, clock{0.0}
 	, total_message{0}
 	, time_out{0.0}
-	, current_ack{0}
-    , acked_messages{0}
 
 {
 	this->timeline[0] = 0;
@@ -46,6 +46,7 @@ int Simulator::run(char* argv[])
 {
 	// cambiar si es con interfaz
 	this->max_time = (unsigned int) atoi(argv[1]);
+	this->time_out = (double) atof(argv[2]);
 	bool stop = false;
 	int ret = 0;
 	while(!stop)
@@ -269,7 +270,7 @@ int Simulator::ack_arrival()
   	else if( received_ack >= this->current_ack)
     {
       	// Desecho los mensajes ackeados de la lista
-      	int acked_msgs = 1 + received_ack - this->current_ack;
+      	unsigned int acked_msgs = 1 + received_ack - this->current_ack;
  		
       	this->acked_messages += acked_msgs;
       
