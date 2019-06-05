@@ -29,10 +29,16 @@ class Simulator
         // 
         std::list<Message> message_list;
         // 
-        int max = 0;
-        // Mensaje actual que se va a enviar
-        int current_message = 0;
-    
+        int max;
+  
+        int current_message;
+        
+        bool A_free;
+        
+        bool B_free;
+  
+        unsigned int clock;
+
     public:
         Simulator();
         ~Simulator();
@@ -45,5 +51,3 @@ class Simulator
         double generate_arrival_time();
 };
 #endif // SIMULATOR_H
-
-

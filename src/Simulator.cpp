@@ -1,13 +1,19 @@
-
-#include "Simulator.h"
 #include <iostream>
 #include <ctime>
 
+#include "Simulator.h"
+
 Simulator::Simulator()
+	: max{0}
+	, current_message{0}
+	, A_free{true}
+	, B_free{true}
+	, clock{0}
+
 {
 	this->timeline[0] = 0;
 	for(int index = 1; index < 6; ++index)
-		this->timeline[index] = -1;
+		this->timeline[index] = static_cast<unsigned int>(-1);
 }
 
 Simulator::~Simulator()
@@ -139,5 +145,3 @@ double Simulator::generate_arrival_time()
   
   	return (1 * sum + 25);
 }
-
-
