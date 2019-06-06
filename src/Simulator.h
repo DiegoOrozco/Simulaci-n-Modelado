@@ -30,7 +30,7 @@ class Simulator
         // 
         std::list<Message> message_list;
         //
-        std::queue<int> frame_queue;
+        std::queue<long> frame_queue;
   
         std::queue<int> ack_queue;
         // 
