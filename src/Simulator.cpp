@@ -1,6 +1,7 @@
 
 #include "Simulator.h"
 #include <iostream>
+#include <cstdio>
 #include <ctime>
 #include <limits>
 
@@ -47,12 +48,16 @@ int Simulator::run(char* argv[])
 	// cambiar si es con interfaz
 	this->max_time = (unsigned int) atoi(argv[1]);
 	this->time_out = (double) atof(argv[2]);
+
 	bool stop = false;
 	int ret = 0;
+
 	while(!stop)
 	{
 		int minimum = this->minimum();
 		
+        printf("Min: %d\n", minimum);
+
 		switch(minimum)
 		{
 			case 0: ret = this->message_arrival();	 	break;
@@ -66,8 +71,18 @@ int Simulator::run(char* argv[])
 		
 		if(ret == 1)
 			stop = true;
+
+        printf("Event done. Clock: %lf\n", this->clock);
+        for(int i = 0; i < 6; ++i)
+            printf("%lf ", this->timeline[i]);
+        printf("\n");
+
+        int a = 0;
+        std::cin >> a;
+
 	}
 	
+    printf("Stop\n");
 	// print_statistics();
 	
 	return 0;
@@ -92,7 +107,7 @@ int Simulator::message_arrival()
 	int arrival_time = generate_arrival_time();
   	
 	// MA = T. Arribos
-	this->timeline[0] = arrival_time;
+	this->timeline[0] = this->clock + arrival_time;
 
   	if ( this->clock >= this->max_time )
       	return 1;
@@ -206,21 +221,21 @@ int Simulator::b_released()
   	// si no se perdió
   	else
     {
-      auto iterator = this->message_list.begin();
+        auto iterator = this->message_list.begin();
 
-      // obtengo el los datos del mensaje enviado
-      for(; iterator != this->message_list.end(); ++iterator)
-          if((*iterator).get_id() == index_frame)
-              break;
-      
-      // si el frame tuvo errores
-      if ( (*iterator).get_error() )
-    	// Desechar mensaje
-      	this->frame_queue.pop();
-      // Si frame bueno
-      else
-	    // ++Frame actual
-        ++this->current_frame;	
+        // obtengo el los datos del mensaje enviado
+        for(; iterator != this->message_list.end(); ++iterator)
+            if((*iterator).get_id() == index_frame)
+                break;
+         
+        // si el frame tuvo errores
+        // Desechar mensaje
+        if ( (*iterator).get_error() )
+        	this->frame_queue.pop();
+        // Si frame bueno
+        else
+    	  // ++Frame actual
+          ++this->current_frame;	
 	}
 
     std::srand(std::time(NULL));
@@ -331,7 +346,7 @@ double Simulator::generate_conversion_time()
   	while(result == 0.0)
     {
         std::srand(std::time(NULL));
-        double r = ( std::rand() % 1000 ) / 1000;
+        double r = ( std::rand() % 1000 ) / 1000.0;
         result = -2 * std::log(1-r);
     }
 	
@@ -342,7 +357,7 @@ double Simulator::generate_conversion_time()
 double Simulator::generate_check_time()
 {
   	std::srand(std::time(NULL));
-  	double r = ( std::rand() % 1000 ) / 1000;
+  	double r = ( std::rand() % 1000 ) / 1000.0;
   	return sqrt(5*r+4);
 }
 
@@ -355,7 +370,7 @@ double Simulator::generate_arrival_time()
 	for (int index = 0; index < 12; ++index)
     {
         std::srand(std::time(NULL));
-        r[index] = ( std::rand() % 1000 ) / 1000;    
+        r[index] = ( std::rand() % 1000 ) / 1000.0;    
     }
 	
   	double sum = 0.0;
