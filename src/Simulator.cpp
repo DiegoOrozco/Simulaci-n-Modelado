@@ -25,10 +25,6 @@ Simulator::Simulator()
 
 Simulator::~Simulator()
 {
-    while(!this->frame_queue.empty())
-        this->frame_queue.pop();
-
-    printf("fq size: %u\n", this->frame_queue.size());
 }
 
 int Simulator::minimum()
@@ -87,7 +83,6 @@ int Simulator::run(char* argv[])
 	}
 	
     printf("Stop\n");
-    printf("frame_queue size: %u\n", this->frame_queue.size());
 	// print_statistics();
 	
 	return 0;
@@ -96,11 +91,14 @@ int Simulator::run(char* argv[])
 // Llega un mensaje a A (MA)
 int Simulator::message_arrival()
 {
+  printf("Llega mensaje a A\n");
+
 	this->clock = this->timeline[0];
 	Message new_message(false, total_message); 
   	++this->total_message;
   	this->message_list.push_back(new_message);
   	
+    //if (mensaje en la ventana)
   	if (this->A_free)
     {
 		this->A_free = false;
@@ -123,6 +121,8 @@ int Simulator::message_arrival()
 // Se libera A
 int Simulator::a_released()
 {
+    printf("Se libera A\n");
+
     auto iterator = this->message_list.begin();
 
     for(; iterator != this->message_list.end(); ++iterator)
@@ -149,6 +149,8 @@ int Simulator::a_released()
 
         // FB = reloj + 1
         this->timeline[2] = this->clock + 1;
+
+        printf("Se pushea frame # %d\n", this->current_message);
       	frame_queue.push(this->current_message);
     }
 
@@ -186,6 +188,7 @@ int Simulator::a_released()
 // Llega un frame a B
 int Simulator::frame_arrival()
 {
+    printf("Llega frame a B\n");
 	// Reloj = FB
 	this->clock = this->timeline[2];
   	
@@ -213,12 +216,14 @@ int Simulator::frame_arrival()
 // Se libera B
 int Simulator::b_released()
 {
-  
+    printf("Se libera B\n");
+
 	// Reloj = LB
 	this->clock = this->timeline[3];
 	
   	// obtengo el id del primer frame de la cola
     int index_frame = this->frame_queue.front();
+    printf("Leo frame con id # %d, espero frame # %d\n", index_frame, this->current_frame);
 	
   	// si no son iguales, el frame no se perdió
 	if( index_frame != this->current_frame)
@@ -237,6 +242,7 @@ int Simulator::b_released()
         // Si frame bueno
         if ( !(*iterator).get_error() )
         {
+            printf("Frame bueno\n");
         	this->frame_queue.pop();
             ++this->current_frame;	
         }
@@ -252,7 +258,7 @@ int Simulator::b_released()
     {
     	// LACK = Reloj + 0.25 + 1
     	this->timeline[4] = this->clock + 0.25 + 1;
-        // printf("ACK Push de %d\n", this->current_frame);
+        printf("ACK Push de %d\n", this->current_frame);
         this->ack_queue.push(this->current_frame);
     }
     //Si se pierde
@@ -282,10 +288,11 @@ int Simulator::b_released()
 // Llega un ACK a A
 int Simulator::ack_arrival()
 {
+    printf("Llega ACK a A\n");
 	// Reloj = LACK
   	this->clock = this->timeline[4];
   	int received_ack = this->ack_queue.front();
-    // printf("Leo ACK #%d, espero ACK #%d\n", received_ack, this->current_ack);
+    printf("Leo ACK #%d, espero ACK #%d\n", received_ack, this->current_ack);
   	
   	// Si ack menor que el esperado
     if(received_ack < this->current_ack)  
@@ -293,7 +300,8 @@ int Simulator::ack_arrival()
        	// Msj actual = 0
       	this->current_message = this->acked_messages;
       	this->timeline[5] = std::numeric_limits<double>::infinity();
-		
+		this->timeline[4] = std::numeric_limits<double>::infinity();
+
       	for(auto iterator = this->message_list.begin(); iterator != message_list.end(); ++iterator)
         {
           	(*iterator).set_timeout( std::numeric_limits<double>::infinity() );
@@ -325,7 +333,7 @@ int Simulator::ack_arrival()
         }
     }
   
-  	if(this->A_free || !this->message_list.empty())
+  	if(this->A_free && !this->message_list.empty())
     {
         double conversion_time = generate_conversion_time();        
         this->timeline[1] = this->clock + conversion_time + 1;
@@ -341,6 +349,7 @@ int Simulator::ack_arrival()
 //  timer que se vence el timer timeout time que se vence cuando da timeout con el timer
 int Simulator::timeout()
 {
+    printf("Ocurre un timeout\n");
 	// Reloj = LACK
   	this->clock = this->timeline[5];
 

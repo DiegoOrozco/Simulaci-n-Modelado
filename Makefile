@@ -1,4 +1,4 @@
-FLAGS := -Wall -Wextra
+FLAGS := -Wall -Wextra -g
 
 BUILD_DIR	:= build
 SOURCE_DIR	:= src
