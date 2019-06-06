@@ -86,8 +86,18 @@ int Simulator::run(char* argv[])
 	}
 	
     printf("Stop\n");
-	// print_statistics();
+
+    // Clean messages
+    while(!this->message_list.empty())
+        this->message_list.pop_front();
+
+    while(!this->frame_queue.empty())
+        this->frame_queue.pop();
+
+    while(!this->ack_queue.empty())
+       this->ack_queue.pop();
 	
+	// print_statistics();
 	return 0;
 }
 
@@ -107,7 +117,6 @@ int Simulator::message_arrival()
 		this->A_free = false;
       	double conversion_time = generate_conversion_time();
       	this->timeline[1] = this->clock + conversion_time + 1;
-		this->A_free = true;
     }
   
 	int arrival_time = generate_arrival_time();
@@ -183,6 +192,7 @@ int Simulator::a_released()
         this->timeline[1] = std::numeric_limits<double>::infinity();
     }
   	
+	this->A_free = true;
   
   	// Si reloj > MAX
     if ( this->clock >= this->max_time )
@@ -207,7 +217,6 @@ int Simulator::frame_arrival()
     	
       	//LB = Reloj + T. Revisión + 0.25
      	this->timeline[3] = this->clock + check_time + 0.25;      
-      	this->B_free = true;
     }
   
 	// FB = inf	
@@ -231,7 +240,7 @@ int Simulator::b_released()
     int index_frame = this->frame_queue.front();
     printf("Leo frame con id # %d, espero frame # %d\n", index_frame, this->current_frame);
 	
-  	// si no son iguales, el frame no se perdió
+  	// Si son diferentes, el frame se perdió
 	if( index_frame != this->current_frame)
     	// Desechar mensaje
 		this->frame_queue.pop();
@@ -249,11 +258,12 @@ int Simulator::b_released()
         if ( !(*iterator).get_error() )
         {
             printf("Frame bueno\n");
-        	this->frame_queue.pop();
             ++this->current_frame;	
         }
-        // else
-            // Desechar mensaje
+        else
+            printf("Frame malo, desechando\n");
+
+    	this->frame_queue.pop();
 	}
 
     std::srand(std::time(NULL));
@@ -285,6 +295,7 @@ int Simulator::b_released()
         this->timeline[3] = std::numeric_limits<double>::infinity();
     }
 
+  	this->B_free = true;
     if ( this->clock >= this->max_time )
       	return 1;
 	else
@@ -312,8 +323,8 @@ int Simulator::ack_arrival()
         {
           	(*iterator).set_timeout( std::numeric_limits<double>::infinity() );
           	(*iterator).set_send(false);
+            (*iterator).set_error(false);
         }
-      
     }
   	// Si ack correcto
   	else if( received_ack >= this->current_ack)
@@ -334,21 +345,28 @@ int Simulator::ack_arrival()
       	// TO = TO del siguiente
       	if(!this->message_list.empty())
         {
-            printf("Siguiente TO: %f [%d]", this->message_list.front().get_timeout(), this->message_list.front().get_id());
-      		this->timeline[5] = this->message_list.front().get_timeout();
+            if(this->message_list.front().get_send())
+            {
+                printf("Siguiente TO: %f [%d]\n", this->message_list.front().get_timeout(), this->message_list.front().get_id());
+          		this->timeline[5] = this->message_list.front().get_timeout();
+            }
+            else
+                this->timeline[5] = std::numeric_limits<double>::infinity();
         }
       	else
           	this->timeline[5] = std::numeric_limits<double>::infinity();
 
-        this->timeline[4] = std::numeric_limits<double>::infinity();
-  		this->ack_queue.pop();
     }
   
+	this->ack_queue.pop();
+
   	if(this->A_free && !this->message_list.empty())
     {
         double conversion_time = generate_conversion_time();        
         this->timeline[1] = this->clock + conversion_time + 1;
     }
+
+    this->timeline[4] = std::numeric_limits<double>::infinity();
   
     if ( this->clock >= this->max_time )
       	return 1;
@@ -372,9 +390,10 @@ int Simulator::timeout()
     {
         (*iterator).set_timeout( std::numeric_limits<double>::infinity() );
         (*iterator).set_send(false);
+        (*iterator).set_error(false);
     }
     
-    if(this->A_free || !this->message_list.empty())
+    if(this->A_free && !this->message_list.empty())
     {
         double conversion_time = generate_conversion_time();        
         this->timeline[1] = this->clock + conversion_time + 1;

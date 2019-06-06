@@ -11,8 +11,9 @@ Message::Message()
 
 Message::Message(bool send_message, int new_id)
 	: message_send{send_message}
-	, id{new_id}
 	, error{false}
+	, timeout {0}
+	, id{new_id}
 
 {
 }
