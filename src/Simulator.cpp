@@ -1,5 +1,7 @@
 
 #include "Simulator.h"
+
+#include <unistd.h>
 #include <iostream>
 #include <cstdio>
 #include <ctime>
@@ -48,6 +50,7 @@ int Simulator::run(char* argv[])
 	// cambiar si es con interfaz
 	this->max_time = (unsigned int) atoi(argv[1]);
 	this->time_out = (double) atof(argv[2]);
+    int delay = atoi(argv[3]);
 
 	bool stop = false;
 	int ret = 0;
@@ -56,7 +59,7 @@ int Simulator::run(char* argv[])
 	{
 		int minimum = this->minimum();
 		
-        printf("Min: %d\n", minimum);
+        printf("\n");
 
 		switch(minimum)
 		{
@@ -74,9 +77,9 @@ int Simulator::run(char* argv[])
 
         printf("Event done. Clock: %lf\n", this->clock);
         for(int i = 0; i < 6; ++i)
-            printf("%lf ", this->timeline[i]);
-        printf("\n");
-
+            printf("| %lf ", this->timeline[i]);
+        printf("|\n");
+        sleep(delay); 
         // int a = 0;
         // std::cin >> a;
 
@@ -137,6 +140,7 @@ int Simulator::a_released()
     // si el mensaje se pierde
     if(random <= 0.05)
     {
+        printf("Se pierde el mensaje\n");
         // FB = inf
         this->timeline[2] = std::numeric_limits<double>::infinity();
     }
@@ -162,7 +166,9 @@ int Simulator::a_released()
 	
   	// Si TO es infinito
     if(this->timeline[5] == std::numeric_limits<double>::infinity() )
+    {
         this->timeline[5] = this->clock + this->time_out;
+    }
 	
   	++this->current_message;
 
@@ -257,14 +263,14 @@ int Simulator::b_released()
     if(random > 0.15)
     {
     	// LACK = Reloj + 0.25 + 1
-    	this->timeline[4] = this->clock + 0.25 + 1;
         printf("ACK Push de %d\n", this->current_frame);
+    	this->timeline[4] = this->clock + 0.25 + 1;
         this->ack_queue.push(this->current_frame);
     }
     //Si se pierde
     else
     {
-	    //LACK = ∞
+        printf("Se pierde el ACK\n");
         this->timeline[4] = std::numeric_limits<double>::infinity();
     }
 		     
@@ -318,19 +324,24 @@ int Simulator::ack_arrival()
       	this->acked_messages += acked_msgs;
       
       	for(size_t message = 0; message < acked_msgs; ++message)
-      		this->message_list.pop_front();
+        {
+            this->message_list.pop_front();
+        }
       
       	// Muevo la ventana
       	this->current_ack =  this->acked_messages+1;
       
       	// TO = TO del siguiente
       	if(!this->message_list.empty())
-      		this->timeline[5] = this->message_list.front().get_timeout();
-      	else
         {
-          	this->timeline[5] = std::numeric_limits<double>::infinity();
-            this->timeline[4] = std::numeric_limits<double>::infinity();
+            printf("Siguiente TO: %f [%d]", this->message_list.front().get_timeout(), this->message_list.front().get_id());
+      		this->timeline[5] = this->message_list.front().get_timeout();
         }
+      	else
+          	this->timeline[5] = std::numeric_limits<double>::infinity();
+
+        this->timeline[4] = std::numeric_limits<double>::infinity();
+  		this->ack_queue.pop();
     }
   
   	if(this->A_free && !this->message_list.empty())
