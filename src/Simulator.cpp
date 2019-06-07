@@ -19,7 +19,7 @@ Simulator::Simulator()
 	, total_message{0}
 	, time_out{0.0}
 	, max_window_size{0}
-
+	, frames_received{0}
 {
 	this->timeline[0] = 0;
 	for(int index = 1; index < 6; ++index)
@@ -105,17 +105,18 @@ int Simulator::run(char* argv[])
 // Llega un mensaje a A (MA)
 int Simulator::message_arrival()
 {
+
 	printf("Llega mensaje a A\n");
 
 	this->clock = this->timeline[0];
 	Message new_message(false, total_message); 
 	++this->total_message;
 	++this->max_window_size;
-	printf("window size %d de %d\n", max_window_size, total_message);
+	printf("window size %d de %d\n", this->total_message - this->max_window_size, total_message);
 	this->message_list.push_back(new_message);
 	
 	//if (mensaje en la ventana)
-	if(this->max_window_size <= 8)
+	if(this->total_message - this->max_window_size <= 8)
 	{
 		if (this->A_free)
 		{
@@ -129,6 +130,7 @@ int Simulator::message_arrival()
 	
 	int arrival_time = generate_arrival_time();
 		
+	update_data("Llega mensaje a A");
 	// MA = T. Arribos
 	this->timeline[0] = this->clock + arrival_time;
 
@@ -141,7 +143,7 @@ int Simulator::message_arrival()
 // Se libera A
 int Simulator::a_released()
 {
-	printf("Se libera A\n");
+//	printf("Se libera A\n");
 
 	auto iterator = this->message_list.begin();
 	for(; iterator != this->message_list.end(); ++iterator)
@@ -199,6 +201,7 @@ int Simulator::a_released()
 		this->A_free = true;
 	}
 
+	update_data("Se libera A");
 	// Si reloj > MAX
 	if ( this->clock >= this->max_time )
 			return 1;
@@ -209,7 +212,7 @@ int Simulator::a_released()
 // Llega un frame a B
 int Simulator::frame_arrival()
 {
-	printf("Llega frame a B\n");
+//	printf("Llega frame a B\n");
 	// Reloj = FB
 	this->clock = this->timeline[2];
 		
@@ -227,7 +230,8 @@ int Simulator::frame_arrival()
 	
 	// FB = inf	
 	this->timeline[2] = std::numeric_limits<double>::infinity();
-	 
+ 
+	update_data("Llega frame a B");
 	if ( this->clock >= this->max_time )
 		return 1;
 	else
@@ -237,7 +241,7 @@ int Simulator::frame_arrival()
 // Se libera B
 int Simulator::b_released()
 {
-	printf("Se libera B\n");
+	//printf("Se libera B\n");
 
 	// Reloj = LB
 	this->clock = this->timeline[3];
@@ -260,12 +264,13 @@ int Simulator::b_released()
 		{
 			printf("Frame bueno\n");
 			++this->current_frame;	
+
 		}
 		else
 			printf("Frame malo, desechando\n");
 	}
 
-		// Saco el mensaje de la cola
+	// Saco el mensaje de la cola
 	this->frame_queue.pop();
 
 	std::srand(std::time(NULL));
@@ -275,8 +280,9 @@ int Simulator::b_released()
 	if(random > 0.15)
 	{
 		this->timeline[4] = this->clock + 0.25 + 1;
-			this->ack_queue.push(this->current_frame);
-			printf("ACK Push de %d\n", this->current_frame);
+		this->ack_queue.push(this->current_frame);
+		//this->last_ack_received = this->current_frame;
+		printf("ACK Push de %d\n", this->current_frame);
 	}
 	//Si se pierde
 	else
@@ -296,6 +302,8 @@ int Simulator::b_released()
 		this->timeline[3] = std::numeric_limits<double>::infinity();
 		this->B_free = true;
 	}
+
+	update_data("Se libera B");
 
 	if ( this->clock >= this->max_time )
 		return 1;
@@ -317,8 +325,7 @@ int Simulator::ack_arrival()
 	if(received_ack < this->current_ack)  
 	{
 		// Msj actual = 0
-		this->max_window_size = 0;
-		printf("window size %d de %d\n", max_window_size, total_message);
+		printf("window size %d de %d\n", this->total_message - this->max_window_size, total_message);
 		this->current_message = this->acked_messages;
 		this->timeline[5] = std::numeric_limits<double>::infinity();
 
@@ -344,7 +351,7 @@ int Simulator::ack_arrival()
 		// Muevo la ventana
 		// Falta mover la ventana
 		--this->max_window_size;
-		printf("window size %d de %d\n", max_window_size, total_message);
+		printf("window size %d de %d\n", this->total_message - this->max_window_size, total_message);
 
 		this->current_ack = this->acked_messages+1;
 	
@@ -358,6 +365,7 @@ int Simulator::ack_arrival()
 			this->timeline[5] = std::numeric_limits<double>::infinity();
 	}	
 		
+	this->max_window_size = this->current_message;
 	this->ack_queue.pop();
 
 	if(this->A_free && !this->message_list.empty())
@@ -368,6 +376,7 @@ int Simulator::ack_arrival()
 	}
 
 	this->timeline[4] = std::numeric_limits<double>::infinity();
+	update_data("Llega ACK a A");
 
 	if ( this->clock >= this->max_time )
 			return 1;
@@ -379,33 +388,35 @@ int Simulator::ack_arrival()
 //  timer que se vence el timer timeout time que se vence cuando da timeout con el timer
 int Simulator::timeout()
 {
-		printf("Ocurre un timeout\n");
+	printf("Ocurre un timeout\n");
 	// Reloj = LACK
-		this->clock = this->timeline[5];
+	this->clock = this->timeline[5];
 
-		// Msj actual = 0
-		this->max_window_size = 0;
-		printf("window size %d de %d\n", max_window_size, total_message);
-		this->current_message = this->acked_messages;
-		this->timeline[5] = std::numeric_limits<double>::infinity();
-		this->timeline[4] = std::numeric_limits<double>::infinity();
+	// Msj actual = 0
+//	this->max_window_size = 0;
+	this->max_window_size = this->current_message = this->acked_messages;
+	printf("window size %d de %d\n", this->total_message - this->max_window_size, total_message);
+	this->timeline[5] = std::numeric_limits<double>::infinity();
+	this->timeline[4] = std::numeric_limits<double>::infinity();
 
-		for(auto iterator = this->message_list.begin(); iterator != message_list.end(); ++iterator)
-		{
-				(*iterator).set_timeout( std::numeric_limits<double>::infinity() );
-				(*iterator).set_send(false);
-				(*iterator).set_error(false);
-		}
-		
-		if(this->A_free && !this->message_list.empty())
-		{
-				double conversion_time = generate_conversion_time();        
-				this->timeline[1] = this->clock + conversion_time + 1;
-				this->A_free = false;
-		}
+	for(auto iterator = this->message_list.begin(); iterator != message_list.end(); ++iterator)
+	{
+		(*iterator).set_timeout( std::numeric_limits<double>::infinity() );
+		(*iterator).set_send(false);
+		(*iterator).set_error(false);
+	}
+	
+	if(this->A_free && !this->message_list.empty())
+	{
+		double conversion_time = generate_conversion_time();        
+		this->timeline[1] = this->clock + conversion_time + 1;
+		this->A_free = false;
+	}
 
-		if ( this->clock >= this->max_time )
-				return 1;
+	update_data("Ocurre un timeout");
+
+	if ( this->clock >= this->max_time )
+		return 1;
 	else
 		return 0;    
 }
@@ -414,44 +425,67 @@ int Simulator::timeout()
 // Generar tiempo de conversión
 double Simulator::generate_conversion_time()
 {
-		double result = 0.0;
-	
-		while(result == 0.0)
-		{
-				std::srand(std::time(NULL));
-				double r = ( std::rand() % 1000 ) / 1000.0;
-				result = -2 * std::log(1-r);
-		}
-	
-		return result;
+	double result = 0.0;
+
+	while(result == 0.0)
+	{
+		std::srand(std::time(NULL));
+		double r = ( std::rand() % 1000 ) / 1000.0;
+		result = -2 * std::log(1-r);
+	}
+
+	return result;
 }
 
 // Generar tiempo de revisión
 double Simulator::generate_check_time()
 {
-		std::srand(std::time(NULL));
-		double r = ( std::rand() % 1000 ) / 1000.0;
-		return sqrt(5*r+4);
+	std::srand(std::time(NULL));
+	double r = ( std::rand() % 1000 ) / 1000.0;
+	return sqrt(5*r+4);
 }
 
 
 // Generar tiempo entre arribos
 double Simulator::generate_arrival_time()
 {
-		double r[12];
+	double r[12];
 	
 	for (int index = 0; index < 12; ++index)
-		{
-				std::srand(std::time(NULL));
-				r[index] = ( std::rand() % 1000 ) / 1000.0;    
-		}
+	{
+		std::srand(std::time(NULL));
+		r[index] = ( std::rand() % 1000 ) / 1000.0;    
+	}
 	
-		double sum = 0.0;
-		for (int index = 0; index < 12; ++index)
-			sum += r[index];
+	double sum = 0.0;
+	for (int index = 0; index < 12; ++index)
+		sum += r[index];
 	
 	sum -= 6;
 	
-		return (1 * sum + 25);
+	return (1 * sum + 25);
 }
 
+void Simulator::update_data(const char* event)
+{
+	printf("----------------------------------------------------\n");
+	std::cout << "Evento \t\t\t\t|" << event << std::endl;
+	std::cout << "Clock \t\t\t\t|" << this->clock << std::endl;
+	std::cout << "Length queue A\t\t\t|" << this->message_list.size() << std::endl;
+	std::cout << "Message queue A\t\t\t|";
+
+	for(int index = 1; index <= this->total_message && index <= 20; ++index)
+		printf("%d - ", index );
+	std::cout << std::endl;
+	std::cout << "Last ACK received by A\t\t|" << this->current_ack << std::endl;
+	std::cout << "Last ACK send by B\t\t|" << this->current_frame << std::endl;
+	std::cout << "Correct frames received\t\t|" << this->current_frame << std::endl;
+	std::cout << "Last correct frames received\t|";
+
+	for(int index = 1; index <= this->total_message && index <= 20; ++index)
+		printf("%d - ", index );
+	std::cout << std::endl;
+	printf("----------------------------------------------------\n");
+	
+
+}

@@ -25,6 +25,8 @@ class Simulator
         int timeout();
         //
         int minimum();
+        //
+        void update_data(const char* event);
         // linea de tiempo miedo
         double timeline[6];
         // 
@@ -55,6 +57,8 @@ class Simulator
         double time_out;
         //
         int max_window_size;
+        //
+        int frames_received;
 
     public:
         Simulator();
