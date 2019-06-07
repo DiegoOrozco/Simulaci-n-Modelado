@@ -104,7 +104,7 @@ int Simulator::run(char* argv[])
 // Llega un mensaje a A (MA)
 int Simulator::message_arrival()
 {
-  printf("Llega mensaje a A\n");
+    printf("Llega mensaje a A\n");
 
 	this->clock = this->timeline[0];
 	Message new_message(false, total_message); 
@@ -114,9 +114,9 @@ int Simulator::message_arrival()
     //if (mensaje en la ventana)
   	if (this->A_free)
     {
-		this->A_free = false;
       	double conversion_time = generate_conversion_time();
       	this->timeline[1] = this->clock + conversion_time + 1;
+		this->A_free = false;
     }
   
 	int arrival_time = generate_arrival_time();
@@ -136,7 +136,6 @@ int Simulator::a_released()
     printf("Se libera A\n");
 
     auto iterator = this->message_list.begin();
-
     for(; iterator != this->message_list.end(); ++iterator)
         if((*iterator).get_id() == this->current_message)
             break;
@@ -150,7 +149,6 @@ int Simulator::a_released()
     if(random <= 0.05)
     {
         printf("Se pierde el mensaje\n");
-        // FB = inf
         this->timeline[2] = std::numeric_limits<double>::infinity();
     }
     // Si el mensaje no se pierde
@@ -159,26 +157,27 @@ int Simulator::a_released()
         // Si el mensaje viene con error
         if (random >= 0.9)
             (*iterator).set_error(true);
+        else
+            (*iterator).set_error(false);
 
         // FB = reloj + 1
         this->timeline[2] = this->clock + 1;
 
-        printf("Se pushea frame # %d\n", this->current_message);
+        printf("Se pushea frame #%d %s\n", this->current_message, random >= 0.9 ? "con error" : "sin error");
       	frame_queue.push(this->current_message);
     }
 
-	// Siempre asumo que el mensaje se envia
-    (*iterator).set_send(true);
-  
-  	// Guardo el TO en el vector
-    (*iterator).set_timeout(this->clock + this->time_out);
-	
   	// Si TO es infinito
     if(this->timeline[5] == std::numeric_limits<double>::infinity() )
     {
         this->timeline[5] = this->clock + this->time_out;
     }
+  	// Guardo el TO en el vector
+    (*iterator).set_timeout(this->clock + this->time_out);
 	
+	// Siempre asumo que el mensaje se envia
+    (*iterator).set_send(true);
+
   	++this->current_message;
 
   	// Si hay más mensajes en la ventana
@@ -190,9 +189,8 @@ int Simulator::a_released()
     else
     {
         this->timeline[1] = std::numeric_limits<double>::infinity();
+	    this->A_free = true;
     }
-  	
-	this->A_free = true;
   
   	// Si reloj > MAX
     if ( this->clock >= this->max_time )
@@ -212,6 +210,7 @@ int Simulator::frame_arrival()
   	if (this->B_free)
     {
 		this->B_free = false;
+
     	// Generar T. Revisión
 		double check_time = generate_check_time();
     	
@@ -238,18 +237,13 @@ int Simulator::b_released()
 	
   	// obtengo el id del primer frame de la cola
     int index_frame = this->frame_queue.front();
-    printf("Leo frame con id # %d, espero frame # %d\n", index_frame, this->current_frame);
+    printf("Leo frame con id #%d, espero frame #%d\n", index_frame, this->current_frame);
 	
-  	// Si son diferentes, el frame se perdió
-	if( index_frame != this->current_frame)
-    	// Desechar mensaje
-		this->frame_queue.pop();
-  	// si no se perdió
-  	else
+  	// Si viene la secuencia esperada
+  	if(index_frame == this->current_frame)
     {
+        // Obtengo los datos del mensaje enviado
         auto iterator = this->message_list.begin();
-
-        // obtengo el los datos del mensaje enviado
         for(; iterator != this->message_list.end(); ++iterator)
             if((*iterator).get_id() == index_frame)
                 break;
@@ -262,9 +256,10 @@ int Simulator::b_released()
         }
         else
             printf("Frame malo, desechando\n");
-
-    	this->frame_queue.pop();
 	}
+
+    // Saco el mensaje de la cola
+	this->frame_queue.pop();
 
     std::srand(std::time(NULL));
     double random = ( std::rand() % 100 ) / 100.0;
@@ -272,10 +267,9 @@ int Simulator::b_released()
 	//Si no se pierde el ACK
     if(random > 0.15)
     {
-    	// LACK = Reloj + 0.25 + 1
-        printf("ACK Push de %d\n", this->current_frame);
     	this->timeline[4] = this->clock + 0.25 + 1;
         this->ack_queue.push(this->current_frame);
+        printf("ACK Push de %d\n", this->current_frame);
     }
     //Si se pierde
     else
@@ -284,7 +278,7 @@ int Simulator::b_released()
         this->timeline[4] = std::numeric_limits<double>::infinity();
     }
 		     
-    // Si hay más mensajes en la ventana
+    // Si hay más frames en la cola
     if(!this->frame_queue.empty())
     {
         double check_time = generate_check_time();        
@@ -293,9 +287,9 @@ int Simulator::b_released()
     else
     {
         this->timeline[3] = std::numeric_limits<double>::infinity();
+  	    this->B_free = true;
     }
 
-  	this->B_free = true;
     if ( this->clock >= this->max_time )
       	return 1;
 	else
@@ -305,9 +299,10 @@ int Simulator::b_released()
 // Llega un ACK a A
 int Simulator::ack_arrival()
 {
-    printf("Llega ACK a A\n");
 	// Reloj = LACK
   	this->clock = this->timeline[4];
+
+    printf("Llega ACK a A\n");
   	int received_ack = this->ack_queue.front();
     printf("Leo ACK #%d, espero ACK #%d\n", received_ack, this->current_ack);
   	
@@ -317,7 +312,6 @@ int Simulator::ack_arrival()
        	// Msj actual = 0
       	this->current_message = this->acked_messages;
       	this->timeline[5] = std::numeric_limits<double>::infinity();
-		this->timeline[4] = std::numeric_limits<double>::infinity();
 
       	for(auto iterator = this->message_list.begin(); iterator != message_list.end(); ++iterator)
         {
@@ -327,11 +321,12 @@ int Simulator::ack_arrival()
         }
     }
   	// Si ack correcto
-  	else if( received_ack >= this->current_ack)
+  	else // ( received_ack >= this->current_ack)
     {
       	// Desecho los mensajes ackeados de la lista
       	unsigned int acked_msgs = 1 + received_ack - this->current_ack;
- 		
+ 		printf("Se reportaron %d mensajes correctamente enviados\n", acked_msgs);
+
       	this->acked_messages += acked_msgs;
       
       	for(size_t message = 0; message < acked_msgs; ++message)
@@ -340,30 +335,27 @@ int Simulator::ack_arrival()
         }
       
       	// Muevo la ventana
-      	this->current_ack =  this->acked_messages+1;
+        // Falta mover la ventana
+
+      	this->current_ack = this->acked_messages+1;
       
-      	// TO = TO del siguiente
-      	if(!this->message_list.empty())
+      	// TO = TO del siguiente si se ha enviado
+      	if(!this->message_list.empty() && this->message_list.front().get_send())
         {
-            if(this->message_list.front().get_send())
-            {
-                printf("Siguiente TO: %f [%d]\n", this->message_list.front().get_timeout(), this->message_list.front().get_id());
-          		this->timeline[5] = this->message_list.front().get_timeout();
-            }
-            else
-                this->timeline[5] = std::numeric_limits<double>::infinity();
+            printf("Siguiente TO: %f [%d]\n", this->message_list.front().get_timeout(), this->message_list.front().get_id());
+      		this->timeline[5] = this->message_list.front().get_timeout();
         }
       	else
           	this->timeline[5] = std::numeric_limits<double>::infinity();
-
     }
-  
-	this->ack_queue.pop();
+    
+    this->ack_queue.pop();
 
   	if(this->A_free && !this->message_list.empty())
     {
         double conversion_time = generate_conversion_time();        
         this->timeline[1] = this->clock + conversion_time + 1;
+        this->A_free = false;
     }
 
     this->timeline[4] = std::numeric_limits<double>::infinity();
@@ -385,6 +377,7 @@ int Simulator::timeout()
     // Msj actual = 0
     this->current_message = this->acked_messages;
     this->timeline[5] = std::numeric_limits<double>::infinity();
+    this->timeline[4] = std::numeric_limits<double>::infinity();
 
     for(auto iterator = this->message_list.begin(); iterator != message_list.end(); ++iterator)
     {
@@ -397,6 +390,7 @@ int Simulator::timeout()
     {
         double conversion_time = generate_conversion_time();        
         this->timeline[1] = this->clock + conversion_time + 1;
+        this->A_free = false;
     }
 
     if ( this->clock >= this->max_time )
