@@ -53,6 +53,8 @@ class Simulator
         int total_message;
         //
         double time_out;
+        //
+        int max_window_size;
 
     public:
         Simulator();
