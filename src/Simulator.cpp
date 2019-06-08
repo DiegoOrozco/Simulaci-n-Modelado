@@ -285,7 +285,7 @@ int Simulator::b_released()
     if(random > 0.15)
     {
       this->timeline[4] = this->clock + 0.25 + 1;
-        queue_append(this->ack_queue, this->current_message); 
+        queue_append(this->ack_queue, this->current_frame); 
         printf("ACK Push de %d\n", this->current_frame);
     }
     //Si se pierde
@@ -354,7 +354,8 @@ int Simulator::ack_arrival()
   
     // Muevo la ventana
     // Falta mover la ventana
-    --this->max_window_size;
+    // this->max_window_size -= acked_msgs;
+  	--this->max_window_size;
     printf("window size %d de %d\n", this->total_message - this->max_window_size, total_message);
 
     this->current_ack = this->acked_messages+1;
@@ -482,9 +483,17 @@ void Simulator::update_data(const char* event)
      
     for(auto iterator = this->message_list.begin(); iterator != this->message_list.end(); ++iterator)
     {
-      printf("%d - ", (*iterator).get_id()  );
-      ++total_printed;
-  }
+    	if(total_printed == 0)
+    		printf("[");
+    	else if(total_printed == 8)
+    		printf("]");
+
+     	printf("%d - ", (*iterator).get_id()  );
+      	++total_printed;
+  	}
+
+  	if(total_printed > 0 &&  total_printed <= 7)
+  		printf("]");
 
   std::cout << std::endl;
   std::cout << "Último ACK recibido en A\t\t\t| " << this->current_ack-1 << std::endl;
