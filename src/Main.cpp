@@ -11,12 +11,13 @@ int main(int argc, char* argv[])
 		for (int index = 0; index < times; ++index)
 		{
 			Simulator simulator;
-			ret = simulator.run(argv);			
+			ret = simulator.run(argv);
+			std::cout << "-------------------\n";
 		}
 	}
 	else
 	{
-		std::cout << "Usage <Total time> <timeout> <delay> <time>" << std::endl;
+		std::cout << "Usage <Total time> <timeout> <delay> <times>" << std::endl;
 	}
 
   	return ret;
