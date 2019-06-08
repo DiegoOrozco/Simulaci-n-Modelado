@@ -82,13 +82,10 @@ int Simulator::run(char* argv[])
     if(ret == 1)
       stop = true;
 
-        printf("Event done. Clock: %lf\n", this->clock);
-        for(int i = 0; i < 6; ++i)
-            printf("| %lf ", this->timeline[i]);
-        printf("|\n");
-        sleep(delay); 
-        // int a = 0;
-        // std::cin >> a;
+
+    sleep(delay); 
+    // int a = 0;
+    // std::cin >> a;
 
   }
   
@@ -476,10 +473,10 @@ double Simulator::generate_arrival_time()
 void Simulator::update_data(const char* event)
 {
   printf("----------------------------------------------------\n");
-  std::cout << "Evento \t\t\t\t|" << event << std::endl;
-  std::cout << "Clock \t\t\t\t|" << this->clock << std::endl;
-  std::cout << "Length queue A\t\t\t|" << this->message_list.size() << std::endl;
-  std::cout << "Message queue A\t\t\t|";
+  std::cout << "Evento \t\t\t\t\t\t| " << event << std::endl;
+  std::cout << "Reloj \t\t\t\t\t\t| " << this->clock << std::endl;
+  std::cout << "Tamaño de la cola de A\t\t\t\t| " << this->message_list.size() << std::endl;
+  std::cout << "Cola de mensajes de A\t\t\t\t| ";
 
   int total_printed = 0;
      
@@ -490,10 +487,10 @@ void Simulator::update_data(const char* event)
   }
 
   std::cout << std::endl;
-  std::cout << "Last ACK received by A\t\t|" << this->current_ack-1 << std::endl;
-  std::cout << "Last ACK send by B\t\t|" << this->current_frame << std::endl;
-  std::cout << "Correct frames received\t\t|" << this->current_frame << std::endl;
-  std::cout << "Last correct frames received\t|";
+  std::cout << "Último ACK recibido en A\t\t\t| " << this->current_ack-1 << std::endl;
+  std::cout << "Último ACK enviado por B\t\t\t| " << this->current_frame << std::endl;
+  std::cout << "Cantidad de frames enviados correctamente\t| " << this->current_frame << std::endl;
+  std::cout << "Frames recibidos correctamente\t\t\t| ";
 
   int index = 0;
   if (queue_count(this->frame_received) > 20 )
@@ -502,14 +499,16 @@ void Simulator::update_data(const char* event)
       queue_pop(this->frame_received);    
   }
 
-  for ( queue_iterator_t itr = queue_begin(this->frame_received); itr != queue_end(this->frame_received) && index < 20; itr = queue_next(itr) )
+ 	for ( queue_iterator_t itr = queue_begin(this->frame_received); itr != queue_end(this->frame_received) && index < 20; itr = queue_next(itr) )
     {
         int data = queue_data(itr);
         printf("%d - ", data);
         ++index;
     }
   std::cout << std::endl;
-  printf("----------------------------------------------------\n");
-  
 
+  	for(int i = 0; i < 6; ++i)
+	    printf("| %lf ", this->timeline[i]);
+	printf("|\n");
+  	printf("----------------------------------------------------\n");
 }
