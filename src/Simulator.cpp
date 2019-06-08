@@ -207,6 +207,8 @@ int Simulator::a_released()
       this->A_free = true;
     }
   
+  update_data("Se libera A");
+
     // Si reloj > MAX
     if ( this->clock >= this->max_time )
         return 1;
@@ -235,6 +237,7 @@ int Simulator::frame_arrival()
   
   // FB = inf 
   this->timeline[2] = std::numeric_limits<double>::infinity();
+  update_data("Llega frame a B");
    
     if ( this->clock >= this->max_time )
         return 1;
@@ -307,6 +310,7 @@ int Simulator::b_released()
         this->B_free = true;
     }
 
+  update_data("Se libera B");
     if ( this->clock >= this->max_time )
         return 1;
   else
@@ -478,14 +482,15 @@ void Simulator::update_data(const char* event)
   std::cout << "Message queue A\t\t\t|";
 
   int total_printed = 0;
-  for(int index = this->current_message; index <= this->total_message && total_printed < 20; ++index)
-  {
-      printf("%d - ", index );
+     
+    for(auto iterator = this->message_list.begin(); iterator != this->message_list.end(); ++iterator)
+    {
+      printf("%d - ", (*iterator).get_id()  );
       ++total_printed;
   }
 
   std::cout << std::endl;
-  std::cout << "Last ACK received by A\t\t|" << this->current_ack << std::endl;
+  std::cout << "Last ACK received by A\t\t|" << this->current_ack-1 << std::endl;
   std::cout << "Last ACK send by B\t\t|" << this->current_frame << std::endl;
   std::cout << "Correct frames received\t\t|" << this->current_frame << std::endl;
   std::cout << "Last correct frames received\t|";

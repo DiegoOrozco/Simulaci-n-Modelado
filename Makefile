@@ -1,15 +1,15 @@
-FLAGS := -Wall -Wextra -g
+FLAGS := -Wall -Wextra -g -std=c++11
 
 BUILD_DIR	:= build
 SOURCE_DIR	:= src
 
-SOURCES	:= $(wildcard $(SOURCE_DIR)/*.cpp )
+SOURCES	:= $(wildcard $(SOURCE_DIR)/*.cpp $(SOURCE_DIR)/*.c)
 OBJS 	:= $(patsubst $(SOURCE_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SOURCES) )
 
 
 CC = g++
 
-all: debug 
+all: debug 	
 
 debug: $(BUILD_DIR) $(OBJS) 
 	$(CC) $(FLAGS) $(OBJS) -o simulator.out
