@@ -496,6 +496,12 @@ void Simulator::update_data(const char* event)
   std::cout << "Last correct frames received\t|";
 
   int index = 0;
+  if (queue_count(this->frame_received) > 20 )
+  {
+    for (size_t index = 0; index < queue_count(this->frame_received) - 20; ++index)
+      queue_pop(this->frame_received);    
+  }
+
   for ( queue_iterator_t itr = queue_begin(this->frame_received); itr != queue_end(this->frame_received) && index < 20; itr = queue_next(itr) )
     {
         int data = queue_data(itr);
