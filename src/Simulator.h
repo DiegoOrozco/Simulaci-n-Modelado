@@ -8,7 +8,7 @@
 
 #include "Message.h"
 #include "queue.h"
-
+#include <deque>
 class Simulator
 {
     private:  
@@ -33,11 +33,11 @@ class Simulator
         // 
         std::list<Message> message_list;
         //
-        queue_t* frame_queue;
+        std::deque<int> frame_queue;
   
-        queue_t* frame_received;
+        std::deque<int> frame_received;
 
-        queue_t* ack_queue;
+        std::deque<int> ack_queue;
         // 
         double max_time;
         // Mensaje que A está atendiendo
@@ -62,6 +62,10 @@ class Simulator
         int max_window_size;
         //
         int received_frames;
+        //
+        int waiting;
+        //
+        int send;
 
     public:
         Simulator();
