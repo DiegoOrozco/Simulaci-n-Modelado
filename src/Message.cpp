@@ -18,6 +18,13 @@ Message::Message(bool send_message, int new_id)
 {
 }
 
+Message::Message(bool send_message, int new_id, bool error)
+	: message_send{send_message}
+	, error{error}
+	, timeout {0}
+	, id{new_id}
+{
+}
 
 Message::~Message()
 {

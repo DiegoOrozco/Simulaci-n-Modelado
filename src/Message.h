@@ -11,6 +11,7 @@ class Message
     public:
         Message();
         Message(bool send_message, int new_id);
+        Message(bool send_message, int new_id, bool error);
         ~Message();
 
         inline bool get_send() { return this->message_send; }

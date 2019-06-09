@@ -33,7 +33,7 @@ class Simulator
         // 
         std::list<Message> message_list;
         //
-        std::deque<int> frame_queue;
+        std::deque<Message> frame_queue;
   
         std::deque<int> frame_received;
 

@@ -147,6 +147,13 @@ int Simulator::a_released()
 		if((*iterator).get_id() == this->current_message)
 			break;
 
+	if(iterator == this->message_list.end())
+	{
+		printf("No se encontró el mensaje con id #%d\n", this->current_message);
+
+	}
+
+
 	this->clock = this->timeline[1];
 	std::srand(std::time(NULL));
 
@@ -176,7 +183,9 @@ int Simulator::a_released()
 		this->timeline[2] = this->clock + 1;
 
 		printf("Se pushea frame #%d %s\n", this->current_message, random >= 0.9 ? "con error" : "sin error");
-		this->frame_queue.push_back(this->current_message);
+
+		Message frame(true, this->current_message, (*iterator).get_error() );
+		this->frame_queue.push_back(frame);
 	}
 
 	// Si TO es infinito
@@ -251,20 +260,16 @@ int Simulator::b_released()
 	this->clock = this->timeline[3];
 
 	// obtengo el id del primer frame de la cola
-	int index_frame = this->frame_queue.front();
+	int index_frame = (this->frame_queue.front()).get_id();
 	printf("Leo frame con id #%d, espero frame #%d\n", index_frame, this->current_frame);
 
 	// Si viene la secuencia esperada
 	if(index_frame == this->current_frame)
 	{
 		// Obtengo los datos del mensaje enviado
-		auto iterator = this->message_list.begin();
-		for(; iterator != this->message_list.end(); ++iterator)
-			if((*iterator).get_id() == index_frame)
-					break;
 		 
 		// Si frame bueno
-		if ( !(*iterator).get_error() )
+		if ( !(this->frame_queue.front()).get_error() )
 		{
 			++this->received_frames;
 			printf("Frame bueno\n");
@@ -368,6 +373,9 @@ int Simulator::ack_arrival()
 		printf("pendientes %d de %d\n", this->waiting, total_message);
 
 		this->current_ack = this->acked_messages+1;
+		this->current_message = this->acked_messages;
+
+
 	
 		// TO = TO del siguiente si se ha enviado
 		if(!this->message_list.empty() && this->message_list.front().get_send())
