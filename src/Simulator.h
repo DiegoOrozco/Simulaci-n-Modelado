@@ -38,6 +38,9 @@ class Simulator
         std::deque<int> frame_received;
 
         std::deque<int> ack_queue;
+
+        std::deque<int> prom_message;
+
         // 
         double max_time;
         // Mensaje que A está atendiendo

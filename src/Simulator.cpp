@@ -85,6 +85,13 @@ int Simulator::run(char* argv[])
 	
 	printf("Stop\n");
 
+		double total = 0;
+		for(auto itr:this->prom_message)
+			total += itr;
+
+		printf("\nTamaño promedio cola A: %f\n", total/this->prom_message.size());
+
+
 	// Clean messages
 	while(!this->message_list.empty())
 			this->message_list.pop_front();
@@ -110,8 +117,9 @@ int Simulator::message_arrival()
 	++this->total_message;
 	++this->max_window_size;
 	
-
 	this->message_list.push_back(new_message);
+	this->prom_message.push_back(this->message_list.size());
+
 	
 	//if (mensaje en la ventana)
 	if(this->waiting <= 8)
