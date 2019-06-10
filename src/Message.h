@@ -7,6 +7,7 @@ class Message
         bool error;     
         double timeout;
         int id;
+        double time_arrival;
 
     public:
         Message();
@@ -25,6 +26,10 @@ class Message
 
         inline int get_id() { return this->id; }
         void set_id(int value);        
+
+        inline double get_time() { return this->time_arrival; }
+        void set_time(int value);        
+
 };
 
 #endif // MESSAGE_H

@@ -2,6 +2,7 @@
 
 #include "Simulator.h"
 
+
 int main(int argc, char* argv[])
 {
 	int ret = 1;
@@ -13,6 +14,7 @@ int main(int argc, char* argv[])
 			Simulator simulator;
 			ret = simulator.run(argv);
 			std::cout << "-------------------\n";
+
 		}
 	}
 	else

@@ -14,7 +14,7 @@ Message::Message(bool send_message, int new_id)
 	, error{false}
 	, timeout {0}
 	, id{new_id}
-
+	, time_arrival{0}
 {
 }
 
@@ -23,6 +23,7 @@ Message::Message(bool send_message, int new_id, bool error)
 	, error{error}
 	, timeout {0}
 	, id{new_id}
+	, time_arrival{0}
 {
 }
 
@@ -48,4 +49,9 @@ void Message::set_timeout(double value)
 void Message::set_id(int value)
 {
 	this->id = value;
+}
+
+void Message::set_time(int value)
+{
+	this->time_arrival = value;
 }

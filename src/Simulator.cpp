@@ -91,6 +91,21 @@ int Simulator::run(char* argv[])
 
 		printf("\nTamaño promedio cola A: %f\n", total/this->prom_message.size());
 
+		total = 0;
+		if (this->prom_time_message.size() > 0)
+		{
+			for(auto itr:this->prom_time_message)
+			{
+				printf("%f - ", itr);
+				total += itr;
+			}
+
+			printf("tam %zu\n", this->prom_time_message.size());
+			printf("\nTamaño promedio de pertenencia de un mensaje: %f\n", total/this->current_frame);
+
+		}
+		else
+			printf("No se finalizó correctamente ningun mensaje\n");
 
 	// Clean messages
 	while(!this->message_list.empty())
@@ -112,7 +127,9 @@ int Simulator::message_arrival()
 	printf("Llega mensaje a A\n");
 
 	this->clock = this->timeline[0];
-	Message new_message(false, total_message); 
+	Message new_message(false, total_message);
+	printf("guardo tiempo {%f}\n", this->clock);
+	new_message.set_time(this->clock); 
 
 	++this->total_message;
 	++this->max_window_size;
@@ -192,7 +209,8 @@ int Simulator::a_released()
 
 		printf("Se pushea frame #%d %s\n", this->current_message, random >= 0.9 ? "con error" : "sin error");
 
-		Message frame(true, this->current_message, (*iterator).get_error() );
+		Message frame(true, this->current_message, (*iterator).get_error());
+		frame.set_time((*iterator).get_time());
 		this->frame_queue.push_back(frame);
 	}
 
@@ -289,7 +307,6 @@ int Simulator::b_released()
 	}
 
 	// Saco el mensaje de la cola
-	this->frame_queue.pop_front();
 
 	std::srand(std::time(NULL));
 	double random = ( std::rand() % 100 ) / 100.0;
@@ -300,6 +317,14 @@ int Simulator::b_released()
 		this->timeline[4] = this->clock + 0.25 + 1;
 		this->ack_queue.push_back(this->current_frame);
 		printf("ACK Push de %d\n", this->current_frame);
+
+		if ( !(this->frame_queue.front()).get_error() && index_frame == this->current_frame - 1)
+		{
+			printf("start %f - end %f - total %f\n", (this->frame_queue.front()).get_time(), this->timeline[4], this->timeline[4] - (this->frame_queue.front()).get_time());
+			this->prom_time_message.push_back(this->timeline[4] - (this->frame_queue.front()).get_time());
+
+		}
+
 	}
 	//Si se pierde
 	else
@@ -308,6 +333,9 @@ int Simulator::b_released()
 		this->timeline[4] = std::numeric_limits<double>::infinity();
 	}
 			 
+	printf("A. id es %d \n",(this->frame_queue.front()).get_id() );
+	this->frame_queue.pop_front();
+	printf("D. id es %d \n",(this->frame_queue.front()).get_id() );
 	// Si hay más frames en la cola
 	if(!this->frame_queue.empty())
 	{
@@ -357,6 +385,7 @@ int Simulator::ack_arrival()
 	// Si ack correcto
 	else // ( received_ack >= this->current_ack)
 	{
+
 		// Desecho los mensajes ackeados de la lista
 		unsigned int acked_msgs = 1 + received_ack - this->current_ack;
 		printf("Se reportaron %d mensajes correctamente enviados\n", acked_msgs);
@@ -369,7 +398,7 @@ int Simulator::ack_arrival()
 		// Muevo la ventana
 		// Falta mover la ventana
 		// this->max_window_size -= acked_msgs;
-// CAMBIAAAAAAAR 
+		
 		--this->max_window_size;
 		
 		if (received_ack == this->current_ack)

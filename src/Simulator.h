@@ -41,6 +41,8 @@ class Simulator
 
         std::deque<int> prom_message;
 
+        std::deque<double> prom_time_message;
+
         // 
         double max_time;
         // Mensaje que A está atendiendo
