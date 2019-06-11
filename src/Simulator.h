@@ -4,11 +4,13 @@
 #include <list>
 #include <cmath>
 #include <queue> 
-
+#include <deque>
 
 #include "Message.h"
 #include "queue.h"
-#include <deque>
+#include "Stats.h"
+
+
 class Simulator
 {
     private:  
@@ -75,13 +77,15 @@ class Simulator
     public:
         Simulator();
         ~Simulator();
-        int run(char** argc);
+        int run(char** argc, std::list<Stats> & all_stats);
         // Generar tiempo de conversión
         double generate_conversion_time();
         // Generar tiempo de revisión
         double generate_check_time();
         // Generar tiempo entre arribos
         double generate_arrival_time();
+
+        void print_stats();
 };
 #endif // SIMULATOR_H
 

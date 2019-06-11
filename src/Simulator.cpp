@@ -1,5 +1,6 @@
 
 #include "Simulator.h"
+#include "Stats.h"
 
 #include <unistd.h>
 #include <iostream>
@@ -47,7 +48,7 @@ int Simulator::minimum()
 	return index;
 }
 
-int Simulator::run(char* argv[])
+int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 {
 	// cambiar si es con interfaz
 	this->max_time = (unsigned int) atoi(argv[1]);
@@ -76,48 +77,48 @@ int Simulator::run(char* argv[])
 		if(ret == 1)
 			stop = true;
 
-
 		sleep(delay); 
-		// int a = 0;
-		// std::cin >> a;
-
 	}
-	
+
 	printf("Stop\n");
 
-		double total = 0;
-		for(auto itr:this->prom_message)
-			total += itr;
+	double queue_average = 0.0;
+	for(auto itr:this->prom_message)
+		queue_average += itr;
 
-		printf("\nTamaño promedio cola A: %f\n", total/this->prom_message.size());
+	// printf("\nTamaño promedio cola A: %f\n", queue_average/this->prom_message.size());
 
-		total = 0;
-		if (this->prom_time_message.size() > 0)
+	double permanence_total = 0.0;
+	if (this->prom_time_message.size() > 0)
+	{
+		for(auto itr:this->prom_time_message)
 		{
-			for(auto itr:this->prom_time_message)
-			{
-				printf("%f - ", itr);
-				total += itr;
-			}
-
-			printf("tam %zu\n", this->prom_time_message.size());
-			printf("\nTamaño promedio de pertenencia de un mensaje: %f\n", total/this->current_frame);
-
+			// printf("%f - ", itr);
+			permanence_total += itr;
 		}
-		else
-			printf("No se finalizó correctamente ningun mensaje\n");
 
-	// Clean messages
+		// printf("tam %zu\n", this->prom_time_message.size());
+		// printf("\nTamaño promedio de permanencia de un mensaje: %f\n", permanence_total/this->current_frame);
+
+	}
+	else
+		printf("No se finalizó correctamente ningun mensaje\n");
+
+	// Limpiar colas
 	while(!this->message_list.empty())
 			this->message_list.pop_front();
 
-	// while(!this->frame_queue.empty())
-	//     this->frame_queue.pop();
+	while(!this->frame_queue.empty())
+	    this->frame_queue.pop_front();
 
-	// while(!this->ack_queue.empty())
-	//    this->ack_queue.pop_front();
+	while(!this->ack_queue.empty())
+	   this->ack_queue.pop_front();
 	
-	// print_statistics();
+	// double queue_size, double permanence_time, double transmission_time, double service_time, double efficiency
+
+	Stats stats( queue_average/this->prom_message.size(), permanence_total/this->current_frame, 0, 0, 0);
+	all_stats.push_back(stats);
+
 	return 0;
 }
 
@@ -177,7 +178,6 @@ int Simulator::a_released()
 		printf("No se encontró el mensaje con id #%d\n", this->current_message);
 
 	}
-
 
 	this->clock = this->timeline[1];
 	std::srand(std::time(NULL));
