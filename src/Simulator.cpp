@@ -22,6 +22,7 @@ Simulator::Simulator()
 	, max_window_size{0}
 	, waiting{0}
 	, send{0}
+	, sent_messages{0}
 {
 	this->timeline[0] = 0;
 	for(int index = 1; index < 6; ++index)
@@ -114,9 +115,16 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 	while(!this->ack_queue.empty())
 	   this->ack_queue.pop_front();
 	
-	// double queue_size, double permanence_time, double transmission_time, double service_time, double efficiency
+	// 3.b
+	double permanence_average = permanence_total/this->current_frame;
+	// 3.c
+	double transmission_average = this->sent_messages*2/this->total_message;
+	// 3.d
+	double service_average = permanence_average - transmission_average;
+	// 3.e
+	double efficiency = transmission_average / service_average;
 
-	Stats stats( queue_average/this->prom_message.size(), permanence_total/this->current_frame, 0, 0, 0);
+	Stats stats( queue_average/this->prom_message.size(), permanence_average, transmission_average, service_average, efficiency);
 	all_stats.push_back(stats);
 
 	return 0;
@@ -239,6 +247,8 @@ int Simulator::a_released()
 		this->A_free = true;
 	}
 	
+	++this->sent_messages;
+
 	update_data("Se libera A");
 
 	// Si reloj > MAX

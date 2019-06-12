@@ -24,28 +24,28 @@ class Simulator
         int b_released();
         // Llega un ACK a A
         int ack_arrival();  
-        //  timer que se vence el timer timeout time
+        //  Se vence el timer
         int timeout();
-        //
+        // Consigue el mínimo de los tiempos
         int minimum();
-        //
+        // Estadísticas durante la corrida
         void update_data(const char* event);
-        // linea de tiempo miedo
+        // linea de tiempo 
         double timeline[6];
-        // 
+        // Cola de mensajes por enviar
         std::list<Message> message_list;
-        //
+        // Cola de frames recibidos
         std::deque<Message> frame_queue;
-  
+        // Cola con los id de los frames recibidos
         std::deque<int> frame_received;
-
+        // Cola de ACKs recibidos
         std::deque<int> ack_queue;
-
+        // 
         std::deque<int> prom_message;
-
+        // 
         std::deque<double> prom_time_message;
 
-        // 
+        // Tiempo máximo
         double max_time;
         // Mensaje que A está atendiendo
         int current_message;
@@ -55,15 +55,15 @@ class Simulator
         int current_ack;
         // Cantidad de mensajes que han recibido el ACK
         int acked_messages;
-        //
+        // Si A está libre
         bool A_free;
-        //
+        // Si B está libre
         bool B_free;
-        //
+        // Reloj del sistema
         double clock;
-        //
+        // Cantidad de mensajes recibidos
         int total_message;
-        //
+        // Timeout definido por el usuario
         double time_out;
         //
         int max_window_size;
@@ -73,6 +73,8 @@ class Simulator
         int waiting;
         //
         int send;
+
+        int sent_messages;
 
     public:
         Simulator();
@@ -84,8 +86,6 @@ class Simulator
         double generate_check_time();
         // Generar tiempo entre arribos
         double generate_arrival_time();
-
-        void print_stats();
 };
 #endif // SIMULATOR_H
 
