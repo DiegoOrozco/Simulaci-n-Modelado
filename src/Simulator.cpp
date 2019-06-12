@@ -90,7 +90,7 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 	// printf("\nTamaño promedio cola A: %f\n", queue_average/this->prom_message.size());
 
 	double permanence_total = 0.0;
-	if (this->prom_time_message.size() > 0)
+	if (this->current_frame > 0)
 	{
 		for(auto itr:this->prom_time_message)
 		{
@@ -116,7 +116,7 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 	   this->ack_queue.pop_front();
 	
 	// 3.b
-	double permanence_average = permanence_total/this->current_frame;
+	double permanence_average = (this->current_frame == 0) ? 0.0 : permanence_total/this->current_frame;
 	// 3.c
 	double transmission_average = this->sent_messages*2/this->total_message;
 	// 3.d
@@ -295,6 +295,9 @@ int Simulator::b_released()
 	// Reloj = LB
 	this->clock = this->timeline[3];
 
+	std::srand(std::time(NULL));
+	double random = ( std::rand() % 100 ) / 100.0;
+
 	// obtengo el id del primer frame de la cola
 	int index_frame = (this->frame_queue.front()).get_id();
 	printf("Leo frame con id #%d, espero frame #%d\n", index_frame, this->current_frame);
@@ -309,8 +312,15 @@ int Simulator::b_released()
 		{
 			++this->received_frames;
 			printf("Frame bueno\n");
-			++this->current_frame;  
 			this->frame_received.push_back(this->current_frame);
+			if(random > 0.15)
+			{		
+				printf("start %f - end %f - total %f\n", (this->frame_queue.front()).get_time(), this->clock + 0.25 + 1, (this->clock + 0.25 + 1) - (this->frame_queue.front()).get_time());
+				this->prom_time_message.push_back((this->clock + 0.25 + 1) - (this->frame_queue.front()).get_time());
+				++this->current_frame;  
+			}
+
+
 		}
 		else
 			printf("Frame malo, desechando\n");
@@ -318,8 +328,6 @@ int Simulator::b_released()
 
 	// Saco el mensaje de la cola
 
-	std::srand(std::time(NULL));
-	double random = ( std::rand() % 100 ) / 100.0;
 
 	//Si no se pierde el ACK
 	if(random > 0.15)
@@ -327,14 +335,6 @@ int Simulator::b_released()
 		this->timeline[4] = this->clock + 0.25 + 1;
 		this->ack_queue.push_back(this->current_frame);
 		printf("ACK Push de %d\n", this->current_frame);
-
-		if ( !(this->frame_queue.front()).get_error() && index_frame == this->current_frame - 1)
-		{
-			printf("start %f - end %f - total %f\n", (this->frame_queue.front()).get_time(), this->timeline[4], this->timeline[4] - (this->frame_queue.front()).get_time());
-			this->prom_time_message.push_back(this->timeline[4] - (this->frame_queue.front()).get_time());
-
-		}
-
 	}
 	//Si se pierde
 	else
@@ -568,7 +568,7 @@ void Simulator::update_data(const char* event)
 	std::cout << "Frames recibidos correctamente\t\t\t| ";
 
 	int index = 0;
-	if (this->frame_received.size() > 20 )
+	if (this->frame_received.size() > 20 && this->current_frame != 0)
 	{
 		for (size_t index = 0; index < this->frame_received.size() - 20; ++index)
 			this->frame_received.pop_front();    
