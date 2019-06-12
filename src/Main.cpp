@@ -32,29 +32,18 @@ void print_stats(std::list<Stats> & stats)
 
 	double permanence_average = permanence_sum/stats.size();
 
-	double std_deviation = 0.0;
+	double variance = 0.0;
 
 	for(auto i = stats.begin(); i != stats.end(); ++i)
 	{
 		double subtraction = (*i).get_permanence() - permanence_average;
-		std_deviation += subtraction * subtraction;
+		variance += subtraction * subtraction;
 	}
 
-	std_deviation /= (double)stats.size();
-
-	std_deviation = sqrt(std_deviation);
-
-	double error = std_deviation / sqrt(stats.size());
-
-	if(stats.size() > 30)
-		error *= 1.96;
-	else
-		error *= 2.2622;
-
-	double lower_limit = permanence_average - error;
-	double upper_limit = permanence_average + error;
-
-	// printf("Media %lf\nDesviacion %lf\nerror %lf\n", permanence_average, std_deviation, error);
+	variance /= ((double)stats.size() - 1);
+	 
+	double lower_limit = permanence_average - 2.26 * sqrt(variance / 10);
+	double upper_limit = permanence_average + 2.26 * sqrt(variance / 10);
 
 	printf("Intervalo de confianza del 95%%: Límite inferior = %lf, Límite superior = %lf\n", lower_limit, upper_limit);
 
