@@ -236,7 +236,7 @@ int Simulator::a_released()
 	++this->current_message;
 
 	// Si hay más mensajes en la ventana
-	if(this->current_message < this->total_message)
+	if(this->waiting <= 8 && this->current_message < this->total_message)
 	{
 		double conversion_time = generate_conversion_time();        
 		this->timeline[1] = this->clock + conversion_time + 1;
