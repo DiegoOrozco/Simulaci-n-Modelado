@@ -51,6 +51,7 @@ int Simulator::minimum()
 
 int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 {
+	(void)send;
 	// cambiar si es con interfaz
 	this->max_time = (unsigned int) atoi(argv[1]);
 	this->time_out = (double) atof(argv[2]);
@@ -118,8 +119,8 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 	// 3.b
 	double permanence_average = (this->current_frame == 0) ? 0.0 : permanence_total/this->current_frame;
 	// 3.c
-	printf("Mensajes enviados = %d de %d\n", this->sent_messages, this->total_message);
-	double transmission_average = (double)this->sent_messages*2/(double)this->total_message;
+	printf("Mensajes enviados = %d de %d\n", this->sent_messages, this->acked_messages);
+	double transmission_average = (double)this->sent_messages*2/(double)this->acked_messages;
 	// 3.d
 	double service_average = permanence_average - transmission_average;
 	// 3.e
@@ -233,6 +234,8 @@ int Simulator::a_released()
 
 	// Siempre asumo que el mensaje se envia
 	(*iterator).set_send(true);
+	
+	(*iterator).inc_times();
 
 	++this->current_message;
 
@@ -248,7 +251,6 @@ int Simulator::a_released()
 		this->A_free = true;
 	}
 	
-	++this->sent_messages;
 
 	update_data("Se libera A");
 
@@ -405,7 +407,11 @@ int Simulator::ack_arrival()
 		this->acked_messages += acked_msgs;
 			
 		for(size_t message = 0; message < acked_msgs && !message_list.empty(); ++message)
+		{
+			printf("Veces enviadas %d para el mensaje %d\n", this->message_list.front().get_times(), this->message_list.front().get_id());
+			this->sent_messages += this->message_list.front().get_times();
 			this->message_list.pop_front();
+		}
 	
 		// Muevo la ventana
 		// Falta mover la ventana

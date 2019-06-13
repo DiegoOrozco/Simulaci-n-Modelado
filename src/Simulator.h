@@ -7,7 +7,6 @@
 #include <deque>
 
 #include "Message.h"
-#include "queue.h"
 #include "Stats.h"
 
 
