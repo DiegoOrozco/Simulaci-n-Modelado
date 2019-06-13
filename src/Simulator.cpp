@@ -118,7 +118,8 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 	// 3.b
 	double permanence_average = (this->current_frame == 0) ? 0.0 : permanence_total/this->current_frame;
 	// 3.c
-	double transmission_average = this->sent_messages*2/this->total_message;
+	printf("Mensajes enviados = %d de %d\n", this->sent_messages, this->total_message);
+	double transmission_average = (double)this->sent_messages*2/(double)this->total_message;
 	// 3.d
 	double service_average = permanence_average - transmission_average;
 	// 3.e

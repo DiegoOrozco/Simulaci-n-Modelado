@@ -40,8 +40,11 @@ void print_stats(std::list<Stats> & stats)
 		variance += subtraction * subtraction;
 	}
 
-	variance /= ((double)stats.size() - 1);
-	 
+	if((stats.size() - 1) == 0)
+		variance = 0;
+	else
+		variance /= ((double)stats.size() - 1);
+
 	double lower_limit = permanence_average - 2.26 * sqrt(variance / 10);
 	double upper_limit = permanence_average + 2.26 * sqrt(variance / 10);
 
