@@ -3,15 +3,10 @@
 class Message
 {
     private:
-        // estado en el que se encuentra el mensaje
         bool message_send;
-        // si el mensaje es enviado por error
         bool error;     
-        // tiempo que ocurre el timeout del mensaje
         double timeout;
-        // identificador del mensaje
         int id;
-        // tiempo en que llega a A
         double time_arrival;
 
     public:

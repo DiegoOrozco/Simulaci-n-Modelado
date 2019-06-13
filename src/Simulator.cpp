@@ -19,7 +19,9 @@ Simulator::Simulator()
 	, clock{0.0}
 	, total_message{0}
 	, time_out{0.0}
+	, max_window_size{0}
 	, waiting{0}
+	, send{0}
 	, sent_messages{0}
 {
 	this->timeline[0] = 0;
@@ -85,12 +87,20 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 	for(auto itr:this->prom_message)
 		queue_average += itr;
 
+	// printf("\nTamaño promedio cola A: %f\n", queue_average/this->prom_message.size());
 
 	double permanence_total = 0.0;
 	if (this->current_frame > 0)
 	{
 		for(auto itr:this->prom_time_message)
+		{
+			// printf("%f - ", itr);
 			permanence_total += itr;
+		}
+
+		// printf("tam %zu\n", this->prom_time_message.size());
+		// printf("\nTamaño promedio de permanencia de un mensaje: %f\n", permanence_total/this->current_frame);
+
 	}
 	else
 		printf("No se finalizó correctamente ningun mensaje\n");
@@ -124,16 +134,20 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 // Llega un mensaje a A (MA)
 int Simulator::message_arrival()
 {
+	printf("Llega mensaje a A\n");
+
 	this->clock = this->timeline[0];
 	Message new_message(false, total_message);
 	printf("guardo tiempo {%f}\n", this->clock);
 	new_message.set_time(this->clock); 
 
 	++this->total_message;
+	++this->max_window_size;
 	
 	this->message_list.push_back(new_message);
 	this->prom_message.push_back(this->message_list.size());
 
+	
 	//if (mensaje en la ventana)
 	if(this->waiting <= 8)
 	{
@@ -161,6 +175,8 @@ int Simulator::message_arrival()
 // Se libera A
 int Simulator::a_released()
 {
+	printf("Se libera A\n");
+
 	auto iterator = this->message_list.begin();
 	for(; iterator != this->message_list.end(); ++iterator)
 		if((*iterator).get_id() == this->current_message)
@@ -246,6 +262,7 @@ int Simulator::a_released()
 // Llega un frame a B
 int Simulator::frame_arrival()
 {
+	printf("Llega frame a B\n");
 	// Reloj = FB
 	this->clock = this->timeline[2];
 		
@@ -274,6 +291,8 @@ int Simulator::frame_arrival()
 // Se libera B
 int Simulator::b_released()
 {
+	printf("Se libera B\n");
+
 	// Reloj = LB
 	this->clock = this->timeline[3];
 
@@ -299,12 +318,17 @@ int Simulator::b_released()
 			{		
 				printf("start %f - end %f - total %f\n", (this->frame_queue.front()).get_time(), this->clock + 0.25 + 1, (this->clock + 0.25 + 1) - (this->frame_queue.front()).get_time());
 				this->prom_time_message.push_back((this->clock + 0.25 + 1) - (this->frame_queue.front()).get_time());
-				++this->current_frame;  
 			}
+			++this->current_frame;  
+
+
 		}
 		else
 			printf("Frame malo, desechando\n");
 	}
+
+	// Saco el mensaje de la cola
+
 
 	//Si no se pierde el ACK
 	if(random > 0.15)
@@ -321,7 +345,8 @@ int Simulator::b_released()
 	}
 			 
 	printf("A. id es %d \n",(this->frame_queue.front()).get_id() );
-	this->frame_queue.pop_front();
+	if(!this->frame_queue.empty())
+		this->frame_queue.pop_front();
 	printf("D. id es %d \n",(this->frame_queue.front()).get_id() );
 	// Si hay más frames en la cola
 	if(!this->frame_queue.empty())
@@ -347,6 +372,8 @@ int Simulator::ack_arrival()
 {
 	// Reloj = LACK
 	this->clock = this->timeline[4];
+
+	printf("Llega ACK a A\n");
 
 	int received_ack = this->ack_queue.front();
 	printf("Leo ACK #%d, espero ACK #%d\n", received_ack, this->current_ack);
@@ -377,11 +404,15 @@ int Simulator::ack_arrival()
 
 		this->acked_messages += acked_msgs;
 			
-		for(size_t message = 0; message < acked_msgs; ++message)
+		for(size_t message = 0; message < acked_msgs && !message_list.empty(); ++message)
 			this->message_list.pop_front();
 	
 		// Muevo la ventana
 		// Falta mover la ventana
+		// this->max_window_size -= acked_msgs;
+		
+		--this->max_window_size;
+		
 		if (received_ack == this->current_ack)
 			--this->waiting;
 		else 
@@ -392,6 +423,8 @@ int Simulator::ack_arrival()
 
 		this->current_ack = this->acked_messages+1;
 		this->current_message = this->acked_messages;
+
+
 	
 		// TO = TO del siguiente si se ha enviado
 		if(!this->message_list.empty() && this->message_list.front().get_send())
@@ -403,6 +436,7 @@ int Simulator::ack_arrival()
 			this->timeline[5] = std::numeric_limits<double>::infinity();
 	} 
 		
+	this->max_window_size = this->current_message;
 	this->ack_queue.pop_front();
 
 	if(this->A_free && !this->message_list.empty())
@@ -425,8 +459,14 @@ int Simulator::ack_arrival()
 //  timer que se vence el timer timeout time que se vence cuando da timeout con el timer
 int Simulator::timeout()
 {
+	printf("Ocurre un timeout\n");
 	// Reloj = LACK
 	this->clock = this->timeline[5];
+
+	// Msj actual = 0
+//  this->max_window_size = 0;
+	this->max_window_size = this->current_message = this->acked_messages;
+
 	this->waiting = this->message_list.size();
 	printf("pendientes %d de %d\n", this->waiting, total_message);
 	this->timeline[5] = std::numeric_limits<double>::infinity();

@@ -32,7 +32,6 @@ class Simulator
         void update_data(const char* event);
         // linea de tiempo 
         double timeline[6];
-
         // Cola de mensajes por enviar
         std::list<Message> message_list;
         // Cola de frames recibidos
@@ -41,9 +40,9 @@ class Simulator
         std::deque<int> frame_received;
         // Cola de ACKs recibidos
         std::deque<int> ack_queue;
-        // Tamaño promedio de la cola de A
+        // 
         std::deque<int> prom_message;
-        // Tiempo de promedio de tiempo de duración de cada mensaje 
+        // 
         std::deque<double> prom_time_message;
 
         // Tiempo máximo
@@ -66,11 +65,15 @@ class Simulator
         int total_message;
         // Timeout definido por el usuario
         double time_out;
-        // Cantidad de framces recibidos 
+        //
+        int max_window_size;
+        //
         int received_frames;
-        // Variable que controla cuantos mensajes estan esperando ACK
+        //
         int waiting;
-        // Cantidad de mensajes enviados
+        //
+        int send;
+
         int sent_messages;
 
     public:
