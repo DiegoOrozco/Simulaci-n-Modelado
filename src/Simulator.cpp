@@ -23,6 +23,8 @@ Simulator::Simulator()
 	, waiting{0}
 	, send{0}
 	, sent_messages{0}
+	, initial_time{0}
+	, size{0}
 {
 	this->timeline[0] = 0;
 	for(int index = 1; index < 6; ++index)
@@ -51,7 +53,6 @@ int Simulator::minimum()
 
 int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 {
-	(void)send;
 	// cambiar si es con interfaz
 	this->max_time = (unsigned int) atoi(argv[1]);
 	this->time_out = (double) atof(argv[2]);
@@ -119,14 +120,14 @@ int Simulator::run(char* argv[], std::list<Stats> & all_stats)
 	// 3.b
 	double permanence_average = (this->current_frame == 0) ? 0.0 : permanence_total/this->current_frame;
 	// 3.c
-	printf("Mensajes enviados = %d de %d\n", this->sent_messages, this->acked_messages);
-	double transmission_average = (double)this->sent_messages*2/(double)this->acked_messages;
+	printf("Mensajes enviados = %d de %d\n", this->sent_messages, this->total_message);
+	double transmission_average = (double)this->sent_messages*2/(double)this->total_message;
 	// 3.d
 	double service_average = permanence_average - transmission_average;
 	// 3.e
 	double efficiency = transmission_average / service_average;
 
-	Stats stats( queue_average/this->prom_message.size(), permanence_average, transmission_average, service_average, efficiency);
+	Stats stats( queue_average/this->clock, permanence_average, transmission_average, service_average, efficiency);
 	all_stats.push_back(stats);
 
 	return 0;
@@ -146,9 +147,15 @@ int Simulator::message_arrival()
 	++this->max_window_size;
 	
 	this->message_list.push_back(new_message);
-	this->prom_message.push_back(this->message_list.size());
-
 	
+
+	if( this->size != this->message_list.size() )
+	{
+		this->size = this->message_list.size();
+		this->prom_message.push_back(this->size * (this->clock - this->initial_time) );
+		this->initial_time = this->clock;
+	}
+
 	//if (mensaje en la ventana)
 	if(this->waiting <= 8)
 	{
@@ -234,8 +241,6 @@ int Simulator::a_released()
 
 	// Siempre asumo que el mensaje se envia
 	(*iterator).set_send(true);
-	
-	(*iterator).inc_times();
 
 	++this->current_message;
 
@@ -251,6 +256,7 @@ int Simulator::a_released()
 		this->A_free = true;
 	}
 	
+	++this->sent_messages;
 
 	update_data("Se libera A");
 
@@ -346,10 +352,8 @@ int Simulator::b_released()
 		this->timeline[4] = std::numeric_limits<double>::infinity();
 	}
 			 
-	printf("A. id es %d \n",(this->frame_queue.front()).get_id() );
 	if(!this->frame_queue.empty())
 		this->frame_queue.pop_front();
-	printf("D. id es %d \n",(this->frame_queue.front()).get_id() );
 	// Si hay más frames en la cola
 	if(!this->frame_queue.empty())
 	{
@@ -407,11 +411,15 @@ int Simulator::ack_arrival()
 		this->acked_messages += acked_msgs;
 			
 		for(size_t message = 0; message < acked_msgs && !message_list.empty(); ++message)
-		{
-			printf("Veces enviadas %d para el mensaje %d\n", this->message_list.front().get_times(), this->message_list.front().get_id());
-			this->sent_messages += this->message_list.front().get_times();
 			this->message_list.pop_front();
+
+		if( this->size != this->message_list.size() )
+		{
+			this->size = this->message_list.size();
+			this->prom_message.push_back(this->size * (this->clock - this->initial_time) );
+			this->initial_time = this->clock;
 		}
+
 	
 		// Muevo la ventana
 		// Falta mover la ventana

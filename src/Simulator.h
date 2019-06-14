@@ -7,6 +7,7 @@
 #include <deque>
 
 #include "Message.h"
+#include "queue.h"
 #include "Stats.h"
 
 
@@ -74,6 +75,10 @@ class Simulator
         int send;
 
         int sent_messages;
+        //
+        double initial_time;
+        //
+        unsigned int size;
 
     public:
         Simulator();
