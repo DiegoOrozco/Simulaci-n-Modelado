@@ -151,8 +151,8 @@ int Simulator::message_arrival()
 
 	if( this->size != this->message_list.size() )
 	{
-		this->size = this->message_list.size();
 		this->prom_message.push_back(this->size * (this->clock - this->initial_time) );
+		this->size = this->message_list.size();
 		this->initial_time = this->clock;
 	}
 
@@ -415,8 +415,8 @@ int Simulator::ack_arrival()
 
 		if( this->size != this->message_list.size() )
 		{
-			this->size = this->message_list.size();
 			this->prom_message.push_back(this->size * (this->clock - this->initial_time) );
+			this->size = this->message_list.size();
 			this->initial_time = this->clock;
 		}
 

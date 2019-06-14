@@ -41,7 +41,7 @@ class Simulator
         // Cola de ACKs recibidos
         std::deque<int> ack_queue;
         // 
-        std::deque<int> prom_message;
+        std::deque<double> prom_message;
         // 
         std::deque<double> prom_time_message;
 
